@@ -23,3 +23,6 @@ Install the packages that are required to use this tool that depends on Pyside (
 > [!Important]
 > Check that the versions of the installed packages are appropriate.
 > Some requirements are in [Segment Anything](https://github.com/facebookresearch/segment-anything).
+
+Run main.py
+> python main.py
