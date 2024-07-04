@@ -1,0 +1,416 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1450</width>
+    <height>850</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>AI Segmentation Review</string>
+  </property>
+  <widget class="QTabWidget" name="tabWidget">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>10</y>
+     <width>1431</width>
+     <height>831</height>
+    </rect>
+   </property>
+   <property name="currentIndex">
+    <number>0</number>
+   </property>
+   <widget class="QWidget" name="tab">
+    <attribute name="title">
+     <string>Slice View</string>
+    </attribute>
+    <widget class="QFrame" name="frame">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>1181</width>
+       <height>681</height>
+      </rect>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <widget class="QWidget" name="verticalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>1161</width>
+        <height>651</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout"/>
+     </widget>
+    </widget>
+    <widget class="QPushButton" name="pushButton_loadSlices">
+     <property name="geometry">
+      <rect>
+       <x>1250</x>
+       <y>30</y>
+       <width>111</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load slices</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="spinBox_sliceNum">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>735</y>
+       <width>101</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+    </widget>
+    <widget class="QSlider" name="slider_sliceNum">
+     <property name="geometry">
+      <rect>
+       <x>145</x>
+       <y>739</y>
+       <width>331</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>1000000</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="groupBox">
+     <property name="geometry">
+      <rect>
+       <x>667</x>
+       <y>710</y>
+       <width>331</width>
+       <height>71</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Slice direction</string>
+     </property>
+     <widget class="QRadioButton" name="radioButton_zDir">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>30</y>
+        <width>92</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>along Z</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_yDir">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>30</y>
+        <width>92</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>along Y</string>
+      </property>
+     </widget>
+     <widget class="QRadioButton" name="radioButton_xDir">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>30</y>
+        <width>92</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>along X</string>
+      </property>
+      <property name="checked">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QSpinBox" name="spinBox_brushSize">
+     <property name="geometry">
+      <rect>
+       <x>1312</x>
+       <y>201</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>30</number>
+     </property>
+     <property name="value">
+      <number>6</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>1232</x>
+       <y>201</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Brush (-=) :</string>
+     </property>
+    </widget>
+    <widget class="QSpinBox" name="spinBox_segId">
+     <property name="geometry">
+      <rect>
+       <x>1312</x>
+       <y>250</y>
+       <width>81</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+     <property name="singleStep">
+      <number>1</number>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>1232</x>
+       <y>250</y>
+       <width>71</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Seg ID ([]) :</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_loadMasks">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>1250</x>
+       <y>80</y>
+       <width>111</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Load masks</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_saveMasks">
+     <property name="geometry">
+      <rect>
+       <x>1250</x>
+       <y>130</y>
+       <width>111</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Save masks</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBox_overlaySegMask">
+     <property name="geometry">
+      <rect>
+       <x>500</x>
+       <y>738</y>
+       <width>151</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Overlay seg mask (Rt)</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_3">
+     <property name="geometry">
+      <rect>
+       <x>37</x>
+       <y>708</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Slice num (;') :</string>
+     </property>
+    </widget>
+    <widget class="QListWidget" name="listWidget_segIdPaletteList">
+     <property name="geometry">
+      <rect>
+       <x>1224</x>
+       <y>308</y>
+       <width>171</width>
+       <height>211</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_curPos">
+     <property name="geometry">
+      <rect>
+       <x>1328</x>
+       <y>738</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Pos (0, 0)</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_curSegID">
+     <property name="geometry">
+      <rect>
+       <x>1328</x>
+       <y>766</y>
+       <width>81</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Seg ID = 0</string>
+     </property>
+    </widget>
+    <widget class="QCheckBox" name="checkBox_showAxis">
+     <property name="geometry">
+      <rect>
+       <x>1026</x>
+       <y>738</y>
+       <width>91</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Show Axis</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="geometry">
+      <rect>
+       <x>1214</x>
+       <y>540</y>
+       <width>191</width>
+       <height>151</height>
+      </rect>
+     </property>
+     <property name="title">
+      <string>Edit Blob ID </string>
+     </property>
+     <widget class="QLabel" name="label_5">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>73</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>New Blob ID:</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBox_curBlobID">
+      <property name="geometry">
+       <rect>
+        <x>101</x>
+        <y>34</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>255</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_updateBlobID">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>105</y>
+        <width>75</width>
+        <height>24</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Update</string>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="spinBox_newBlobID">
+      <property name="geometry">
+       <rect>
+        <x>101</x>
+        <y>70</y>
+        <width>71</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="maximum">
+       <number>255</number>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>37</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Cur Blob ID:</string>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
