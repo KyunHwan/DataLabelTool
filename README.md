@@ -9,6 +9,7 @@ This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD t
 
 Move to the project directory, where the **./src** directory resides. Then create **segment-anything-checkpoint** directory and move there.
 > mkdir segment-anything-checkpoint
+
 > cd segment-anything-checkpoint
 
 Then download the default model checkpoint, [ViT-H SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), into this directory.
