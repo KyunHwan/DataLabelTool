@@ -8,7 +8,7 @@ Development environment:
 This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD team. It is implemented using [Qt](https://doc.qt.io/qtforpython-6/).
 
 Clone this directory
-> git clone https://github.com/KyunHwan/DataLabelTool.git
+> git clone --recursive https://github.com/KyunHwan/DataLabelTool.git
 
 Move to the project root directory, where the **./src** directory resides. Then create **segment_anything_checkpoint** directory and move there.
 > mkdir segment_anything_checkpoint
