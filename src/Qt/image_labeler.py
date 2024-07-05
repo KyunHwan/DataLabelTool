@@ -1,10 +1,10 @@
 import os
-import sys
+
 import cv2
 import numpy as np
-from PySide6.QtWidgets import QWidget, QApplication, QGraphicsPixmapItem, QListWidgetItem, QGraphicsLineItem
+from PySide6.QtWidgets import QWidget, QGraphicsPixmapItem, QListWidgetItem, QGraphicsLineItem
 from PySide6.QtGui import QPen, QColor, QPixmap, QImage
-from PySide6.QtCore import Qt, Signal, QPointF
+from PySide6.QtCore import QT_TR_NOOP_UTF8
 from ui_segmentation_refine_form import Ui_Form
 from zoom_graphics_scene import *
 from zoom_graphics_view import *
@@ -391,16 +391,3 @@ class MainWidget(QWidget):
     def saveMasks(self):
         print('saveMasks clicked')
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-
-    app.setStyleSheet('''
-    QListWidget::item:selected {
-        background: red;
-        color: yellow;
-    }''')
-
-    window = MainWidget()    
-    window.show()
-
-    sys.exit(app.exec())
