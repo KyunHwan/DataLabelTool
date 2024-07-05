@@ -23,6 +23,7 @@ Once the model has been saved as described above, move back to the **root** of t
 
 Check the current Python version you are using before proceeding.
 > Python --version
+
 > Python 3.11.6
 
 Create a virtual environment and activate it.
