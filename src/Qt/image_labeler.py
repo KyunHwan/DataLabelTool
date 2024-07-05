@@ -8,17 +8,20 @@ from PySide6.QtCore import QT_TR_NOOP_UTF8
 from .ui_segmentation_refine_form import Ui_Form
 from .zoom_graphics_scene import *
 from .zoom_graphics_view import *
+
 #import qimage2ndarray # https://hmeine.github.io/qimage2ndarray/
 import glob
 from PIL import Image
 #import sfmrect
-
+    
 class MainWidget(QWidget):
-    def __init__(self):
+    def __init__(self, imageSegModel=None):
         super(MainWidget, self).__init__()
+
+        self.model = imageSegModel
+
         self.ui = Ui_Form()
         self.ui.setupUi(self)
-        
         self.sliceScene = ZoomGraphicsScene()
         self.sliceItem = QGraphicsPixmapItem()
         self.sliceItem.setTransformationMode(Qt.SmoothTransformation)
