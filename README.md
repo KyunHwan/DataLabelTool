@@ -13,7 +13,7 @@ Move to the project directory, where the **./src** directory resides. Then creat
 > cd segment-anything-checkpoint
 
 Then download the default model checkpoint, [ViT-H SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), into this directory.
-Check [Segment Anything](https://github.com/facebookresearch/segment-anything) for more details.
+Check [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main) for more details.
 
 Once the model has been saved as described above, move back to the **root** of the project directory, where the **./src** directory is.
 > cd ..
@@ -23,7 +23,7 @@ Install the packages that are required to use this tool that depends on Pyside (
 
 > [!Important]
 > Check that the versions of the installed packages are appropriate.
-> Some requirements are in [Segment Anything](https://github.com/facebookresearch/segment-anything).
+> Some requirements are in [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main).
 
 Run main.py
 > python main.py
