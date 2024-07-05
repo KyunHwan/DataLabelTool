@@ -1,4 +1,4 @@
 env/**
-
+src/**/__pycache__/
 segment_anything/**
 segment_anything_checkpoint/**
