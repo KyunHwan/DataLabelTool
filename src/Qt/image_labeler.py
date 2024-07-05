@@ -5,9 +5,9 @@ import numpy as np
 from PySide6.QtWidgets import QWidget, QGraphicsPixmapItem, QListWidgetItem, QGraphicsLineItem
 from PySide6.QtGui import QPen, QColor, QPixmap, QImage
 from PySide6.QtCore import QT_TR_NOOP_UTF8
-from ui_segmentation_refine_form import Ui_Form
-from zoom_graphics_scene import *
-from zoom_graphics_view import *
+from .ui_segmentation_refine_form import Ui_Form
+from .zoom_graphics_scene import *
+from .zoom_graphics_view import *
 #import qimage2ndarray # https://hmeine.github.io/qimage2ndarray/
 import glob
 from PIL import Image
