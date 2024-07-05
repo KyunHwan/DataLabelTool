@@ -1,11 +1,10 @@
 # DataLabelTool
+This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD team. It is implemented using [Qt](https://doc.qt.io/qtforpython-6/).
 
 Development environment: 
 * Windows 11
 * Python 3.11.6
 * Nvidia RTX4090
-
-This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD team. It is implemented using [Qt](https://doc.qt.io/qtforpython-6/).
 
 Clone this directory
 > git clone --recursive https://github.com/KyunHwan/DataLabelTool.git
