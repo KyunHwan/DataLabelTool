@@ -10,10 +10,10 @@ This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD t
 Clone this directory
 > git clone https://github.com/KyunHwan/DataLabelTool.git
 
-Move to the project root directory, where the **./src** directory resides. Then create **segment-anything-checkpoint** directory and move there.
-> mkdir segment-anything-checkpoint
+Move to the project root directory, where the **./src** directory resides. Then create **segment_anything_checkpoint** directory and move there.
+> mkdir segment_anything_checkpoint
 
-> cd segment-anything-checkpoint
+> cd segment_anything_checkpoint
 
 Then download the default model checkpoint, [ViT-H SAM model](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth), into this directory.
 Check [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main) for more details.
