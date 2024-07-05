@@ -18,3 +18,4 @@ tbb==2021.11.0
 torch==2.3.1+cu118
 torchvision==0.18.1+cu118
 typing_extensions==4.9.0
+wget==3.2
