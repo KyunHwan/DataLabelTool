@@ -22,8 +22,7 @@ if __name__ == "__main__":
     
     url = "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth"
     model_checkpoint = get_checkpoint(current_script_dir=current_script_dir, url=url)
-    if model_checkpoint is None:
-        sys.exit()
+    if model_checkpoint is None: sys.exit()
 
     model_type = get_model_type_from_model_checkpoint(model_checkpoint=model_checkpoint)
     print("Loading model!\n")
