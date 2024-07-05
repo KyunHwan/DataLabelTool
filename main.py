@@ -2,6 +2,7 @@ from PySide6.QtWidgets import QApplication
 import sys
 import os
 import re
+import torch
 from src.Qt.image_labeler import MainWidget
 from src.utils.download_model_checkpoint import get_checkpoint, get_model_type_from_model_checkpoint
 from segment_anything.segment_anything import SamPredictor, sam_model_registry
@@ -27,6 +28,7 @@ if __name__ == "__main__":
     model_type = get_model_type_from_model_checkpoint(model_checkpoint=model_checkpoint)
     print("Loading model!\n")
     sam = sam_model_registry[model_type](checkpoint=model_checkpoint)
+    sam.to(torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
     predictor = SamPredictor(sam)
     print("Model loaded!\n")
 

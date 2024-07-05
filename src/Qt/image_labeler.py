@@ -45,29 +45,30 @@ class MainWidget(QWidget):
         #self.generateSegIdPalette()
 
     def loadImage(self):
-        # https://blog.naver.com/reto1210/223057895936
         init_path = os.getcwd()
         fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
-        if fileName:
-            with Image.open(fileName) as image:
-                self.image = np.asarray(image.convert('RGB'), dtype=np.uint8)
+        with Image.open(fileName) as image:
+            self.image = np.asarray(image.convert('RGB'), dtype=np.uint8)
         height, width, _ = self.image.shape
 
         # Load image
+        # Create mask data
         # Get the image token from SAM for segmentation processes down the line
         if self.model is not None and self.image is not None: self.model.set_image(self.image)
-        self.cur_qimg = QImage(bytes(self.image), width, height, QImage.Format.Format_RGB888)
+        self.id_mask = np.zeros(shape=(height, width), dtype=np.uint8)
+        self.cur_qimg = QImage(bytes(self.image.data), width, height, width*3, QImage.Format.Format_RGB888)
         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
         self.resetToFit()
 
-        # Create mask data                         
-        self.id_mask = np.zeros(shape=(height, width), dtype=np.uint8)
-        
     def segment_image(self):
         if self.model is not None and self.image is not None:
-            return
+            # Outputs C x H x W numpy array
+            masks, _, _ = self.model.predict(point_coords=np.array([[100, 100],[150, 150]]),
+                                             point_labels=np.array([1, 0]),
+                                             multimask_output=False)
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
+        
     """
     def spinBox_segId_changed(self, value): 
         if self.seg_palette.get(value) is None:
