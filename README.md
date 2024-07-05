@@ -21,6 +21,10 @@ Check [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main)
 Once the model has been saved as described above, move back to the **root** of the project directory, where the **./src** directory is.
 > cd ..
 
+Check the current Python version you are using before proceeding.
+> Python --version
+> Python 3.11.6
+
 Create a virtual environment and activate it.
 > [!Warning]
 > If possible, use Python version 3.11.6 to create the virtual environment.
