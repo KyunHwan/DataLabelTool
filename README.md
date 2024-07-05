@@ -7,7 +7,10 @@ Development environment:
 
 This is a basic 2D image labeling tool for teeth segmentation for the 3DII CAD team. It is implemented using [Qt](https://doc.qt.io/qtforpython-6/).
 
-Move to the project directory, where the **./src** directory resides. Then create **segment-anything-checkpoint** directory and move there.
+Clone this directory
+> git clone https://github.com/KyunHwan/DataLabelTool.git
+
+Move to the project root directory, where the **./src** directory resides. Then create **segment-anything-checkpoint** directory and move there.
 > mkdir segment-anything-checkpoint
 
 > cd segment-anything-checkpoint
@@ -18,6 +21,19 @@ Check [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main)
 Once the model has been saved as described above, move back to the **root** of the project directory, where the **./src** directory is.
 > cd ..
 
+Create a virtual environment and activate it.
+> [!Warning]
+> If possible, use Python version 3.11.6 to create the virtual environment.
+> Other Python versions may not work as expected.
+
+> python -m venv env 
+
+> cd env/Scripts
+
+> activate
+
+> cd ../..
+
 Install the packages that are required to use this tool that depends on Pyside (Qt for Python), Pytorch (CUDA-enabled version), opencv, and (optionally) ONNX.
 > pip install -r requirements.txt
 
@@ -25,5 +41,5 @@ Install the packages that are required to use this tool that depends on Pyside (
 > Check that the versions of the installed packages are appropriate.
 > Some requirements are in [Segment Anything](https://github.com/KyunHwan/segment-anything/tree/main).
 
-Run main.py
+Run main.py inside the project's root directory.
 > python main.py
