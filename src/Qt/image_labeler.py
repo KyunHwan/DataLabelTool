@@ -9,11 +9,7 @@ from PySide6.QtCore import QT_TR_NOOP_UTF8
 from .ui_segmentation_refine_form import Ui_Form
 from .zoom_graphics_scene import *
 from .zoom_graphics_view import *
-
-#import qimage2ndarray # https://hmeine.github.io/qimage2ndarray/
-import glob
 from PIL import Image
-#import sfmrect
     
 class MainWidget(QWidget):
     def __init__(self, imageSegModel=None):
@@ -32,7 +28,7 @@ class MainWidget(QWidget):
         self.ui.verticalLayout.addWidget(self.sliceView)
         self.ui.pushButton_loadImage.clicked.connect(self.loadImage)  
         self.ui.pushButton_autoSeg.clicked.connect(self.segment_image)
-        self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
+        #self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
 
         #self.sliceScene.sigMovePositionL.connect(self.show_pixel_seg_id)
         #self.sliceScene.sigMovePositionR.connect(self.paint_slice)
@@ -51,23 +47,27 @@ class MainWidget(QWidget):
     def loadImage(self):
         # https://blog.naver.com/reto1210/223057895936
         init_path = os.getcwd()
-        fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')
-        with Image.open(fileName) as image:
-            self.image = image
+        fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
+        if fileName:
+            with Image.open(fileName) as image:
+                self.image = np.asarray(image.convert('RGB'), dtype=np.uint8)
+        height, width, _ = self.image.shape
 
         # Load image
         # Get the image token from SAM for segmentation processes down the line
         if self.model is not None and self.image is not None: self.model.set_image(self.image)
-        qimg = QImage(bytes(RGBA), w, h, QImage.Format.Format_RGBA8888)
-        # Create mask data                         
-        
+        self.cur_qimg = QImage(bytes(self.image), width, height, QImage.Format.Format_RGB888)
+        self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
         self.resetToFit()
 
+        # Create mask data                         
+        self.id_mask = np.zeros(shape=(height, width), dtype=np.uint8)
+        
     def segment_image(self):
         if self.model is not None and self.image is not None:
-            self.model.set_image()
+            return
         else:
-            print("No existing segmentation model!\n")
+            print("Either model doesn't exist or image doesn't exist!\n")
     """
     def spinBox_segId_changed(self, value): 
         if self.seg_palette.get(value) is None:
