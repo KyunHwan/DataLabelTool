@@ -14,9 +14,10 @@ from PIL import Image
 class MainWidget(QWidget):
     def __init__(self, imageSegModel=None):
         super(MainWidget, self).__init__()
-
+        # Auto segmentation model
         self.model = imageSegModel
-
+        
+        # UI image viewing setup
         self.ui = Ui_Form()
         self.ui.setupUi(self)
         self.sliceScene = ZoomGraphicsScene()
@@ -26,36 +27,54 @@ class MainWidget(QWidget):
         self.sliceView = ZoomGraphicsView()
         self.sliceView.setScene(self.sliceScene)
         self.ui.verticalLayout.addWidget(self.sliceView)
-        self.ui.pushButton_loadImage.clicked.connect(self.loadImage)  
-        self.ui.pushButton_autoSeg.clicked.connect(self.segment_image)
-        #self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
 
-        #self.sliceScene.sigMovePositionL.connect(self.show_pixel_seg_id)
-        #self.sliceScene.sigMovePositionR.connect(self.paint_slice)
+        # Load image onto UI side
+        self.ui.pushButton_loadImage.clicked.connect(self.loadImage)
+
+        # Automatically segment image for the particular seg id chosen  
+        self.ui.pushButton_autoSeg.clicked.connect(self.segment_image)
+        
+        # This should be on 
+        self.sliceScene.sigMovePositionL.connect(self.show_pixel_seg_id)
+        self.sliceScene.sigMovePositionR.connect(self.paint_slice)
 
         #self.ui.spinBox_segId.valueChanged.connect(self.spinBox_segId_changed)
         #self.ui.checkBox_overlaySegMask.toggled.connect(self.checkBox_overlaySegMask_changed)
         #self.ui.listWidget_segIdPaletteList.itemSelectionChanged.connect(self.listWidget_segIdPaletteList_changed)
         #self.ui.pushButton_updateBlobID.clicked.connect(self.pushButton_updateBlobID_clicked)
 
+        #self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
+
+        # Original data
         self.id_mask = None
-        self.cur_qimg = None
         self.image = None
+        
+        # Data to be seen on the UI side. 
+        # Work on cur_qmask on the UI side and commit so that it can be written into id_mask
+        self.cur_qmask = None
+        self.cur_qimg = None
+        
         #self.selected_blob_id = -1
         #self.generateSegIdPalette()
 
     def loadImage(self):
+        # Find image
         init_path = os.getcwd()
         fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
+        
+        # Open image
         with Image.open(fileName) as image:
-            self.image = np.asarray(image.convert('RGB'), dtype=np.uint8)
+            self.image = np.asarray(image.convert('RGB'), dtype=np.uint8) # Loaded image could be RGBA
         height, width, _ = self.image.shape
 
-        # Load image
-        # Create mask data
         # Get the image token from SAM for segmentation processes down the line
         if self.model is not None and self.image is not None: self.model.set_image(self.image)
+        
+        # Create mask data
         self.id_mask = np.zeros(shape=(height, width), dtype=np.uint8)
+        self.cur_qmask = np.zeros(shape=(height, width), dtype=np.uint8)
+
+        # Load image to UI
         self.cur_qimg = QImage(bytes(self.image.data), width, height, width*3, QImage.Format.Format_RGB888)
         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
         self.resetToFit()
