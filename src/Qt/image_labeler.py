@@ -121,7 +121,6 @@ class MainWidget(QWidget):
             self._updateQImage()
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
-        self.seg.clear_prompts()
             
     def show_pixel_seg_id(self, point):
         if self.image_loaded and self.imgMask.id_mask_exists:
@@ -139,6 +138,7 @@ class MainWidget(QWidget):
 
     def _updateQImage(self):
         if self.image_loaded:
+            self.seg.clear_prompts()
             RGB, qmask_valid_mask = self.imgMask.create_qimg_using_qmask()
 
             if self.ui.checkBox_overlaySegMask.isChecked():
@@ -154,12 +154,13 @@ class MainWidget(QWidget):
 
     def spinBox_segId_changed(self, segId):
         if self.qmask_modified:
-            self.imgMask.update_id_mask()
             self.qmask_modified = False
         if self.image_loaded:
-            self.seg.clear_prompts()
+            self.imgMask.update_id_mask()
+            
             self.imgMask.cur_segId = segId
             #if not self.ui.checkBox_overlaySegMask.isChecked():
+            
             self.imgMask.load_qmask_from_id_mask()
             self._updateQImage()
 
@@ -247,37 +248,27 @@ class MainWidget(QWidget):
                         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
     def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Minus:
+        if e.key() == Qt.Key_Z:
             value = self.ui.spinBox_brushSize.value() - 1
             if (value >= self.ui.spinBox_brushSize.minimum()):
                 self.ui.spinBox_brushSize.setValue(value)
                 print(f"brush_size : {value}")
-        elif e.key() == Qt.Key_Equal:
+        elif e.key() == Qt.Key_X:
             value = self.ui.spinBox_brushSize.value() + 1
             if (value <= self.ui.spinBox_brushSize.maximum()):
                 self.ui.spinBox_brushSize.setValue(value)
                 print(f"brush_size : {value}")
-        elif e.key() == Qt.Key_BracketLeft:
+        elif e.key() == Qt.Key_Q:
             value = self.ui.spinBox_segId.value() - 1
             if (value >= self.ui.spinBox_segId.minimum()):
                 self.ui.spinBox_segId.setValue(value)
                 print(f"seg_id : {value}")
-        elif e.key() == Qt.Key_BracketRight:
+        elif e.key() == Qt.Key_W:
             value = self.ui.spinBox_segId.value() + 1
             if (value <= self.ui.spinBox_segId.maximum()):
                 self.ui.spinBox_segId.setValue(value)
                 print(f"seg_id : {value}")
-        elif e.key() == Qt.Key_Semicolon:
-            value = self.ui.slider_sliceNum.value() - 1
-            if (value >= self.ui.slider_sliceNum.minimum()):
-                self.ui.slider_sliceNum.setValue(value)
-                print(f"slider_sliceNum : {value}")
-        elif e.key() == Qt.Key_Apostrophe:
-            value = self.ui.slider_sliceNum.value() + 1
-            if (value <= self.ui.slider_sliceNum.maximum()):
-                self.ui.slider_sliceNum.setValue(value)
-                print(f"slider_sliceNum : {value}")
-        elif e.key() == Qt.Key_Return:
+        elif e.key() == Qt.Key_Space:
             self.ui.checkBox_overlaySegMask.toggle()
             print(f"Overlay seg mask : {self.ui.checkBox_overlaySegMask.isChecked()}")
         elif e.key() == Qt.Key_A:

@@ -83,6 +83,7 @@ class ImageMaskViewModel:
         valid_idx = (self._id_mask == self.cur_segId)
         self._qmask[:, :] = 0
         self._qmask[valid_idx] = self.cur_segId
+        self._id_mask[valid_idx] = 0
 
     def get_image_copy(self):
         return self.image.copy()
