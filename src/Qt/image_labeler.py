@@ -18,7 +18,6 @@ class MainWidget(QWidget):
         super(MainWidget, self).__init__()
         # Auto segmentation model
         
-
         # image rendered on the UI side
         self.cur_qimg = None
         self.qmask_modified = False
@@ -55,7 +54,6 @@ class MainWidget(QWidget):
         # Image & Mask data
         self.imgMask = ImageMaskViewModel(num_seg_ids=num_seg_ids, cur_segId=self.ui.spinBox_segId.value())
 
-        
         #self.ui.listWidget_segIdPaletteList.itemSelectionChanged.connect(self.listWidget_segIdPaletteList_changed)
         #self.ui.pushButton_updateBlobID.clicked.connect(self.pushButton_updateBlobID_clicked)
 
