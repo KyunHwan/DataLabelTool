@@ -1,19 +1,17 @@
-class SegmentationTokenModel:
-    def __init__(self):
+import numpy as np
+
+class SegmentationViewModel:
+    def __init__(self, segmentation_model=None):
+        self.model = segmentation_model
         self.seg_point_coords = []
         self.background_point_coords = []
 
-    def clear(self):
-        self.seg_point_coords.clear()
-        self.background_point_coords.clear()
+    @property
+    def model_exists(self):
+        return self.model is not None
     
-    def add_seg_point(self, point):
-        self.seg_point_coords.append(point)
-    
-    def add_background_point(self, point):
-        self.background_point_coords.append(point)
-
-    def get_seg_tokens(self):
+    @property
+    def prompts(self):
         """ 
         This is for SAM model, specifically point coords token
         """
@@ -22,3 +20,23 @@ class SegmentationTokenModel:
         point_labels = point_label.extend(point_background)
         point_coords = self.background_point_coords.extend(self.background_point_coords)
         return point_labels, point_coords
+    
+    def set_image(self, image):
+        self.model.set_image(image)
+
+    def predict(self, point_coords, point_labels, multimask_output=False):
+        masks, _, _ = self.model.predict(point_coords=np.array(point_coords),
+                                         point_labels=np.array(point_labels),
+                                         multimask_output=False)
+        return masks
+
+    def clear_tokens(self):
+        self.seg_point_coords.clear()
+        self.background_point_coords.clear()
+    
+    def manage_seg_point(self, point):
+        # add background or labels
+        self.seg_point_coords.append(point)
+    
+    def manage_background_points(self, point):
+        self.background_point_coords.append(point)
