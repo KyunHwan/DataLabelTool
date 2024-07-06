@@ -10,6 +10,8 @@ from .ui_segmentation_refine_form import Ui_Form
 from .zoom_graphics_scene import *
 from .zoom_graphics_view import *
 from PIL import Image
+from .DataModels.seg_token_model import SegmentationTokenModel
+from .DataModels.image_mask_model import ImageMaskModel
     
 class MainWidget(QWidget):
     def __init__(self, imageSegModel=None):
@@ -45,15 +47,12 @@ class MainWidget(QWidget):
 
         #self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
 
-        # Original data
-        self.id_mask = None
-        self.image = None
-        
-        # Data to be seen on the UI side. 
-        # Work on cur_qmask on the UI side and commit so that it can be written into id_mask
-        self.cur_qmask = None
-        self.cur_qimg = None
-        
+        # Temporary containers for clicked points that will be used as tokens to SAM model
+        self.segToken = SegmentationTokenModel()
+
+        # Image & Mask data
+        self.segData = ImageMaskModel()
+
         #self.selected_blob_id = -1
         #self.generateSegIdPalette()
 
@@ -80,14 +79,18 @@ class MainWidget(QWidget):
         self.resetToFit()
 
     def segment_image(self):
+        point_coords, point_labels = self.segToken.get_seg_tokens()
         if self.model is not None and self.image is not None:
             # Outputs C x H x W numpy array
-            masks, _, _ = self.model.predict(point_coords=np.array([[100, 100],[150, 150]]),
-                                             point_labels=np.array([1, 0]),
+            
+            masks, _, _ = self.model.predict(point_coords=np.array(point_coords),
+                                             point_labels=np.array(point_labels),
                                              multimask_output=False)
+            
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
         
+        self.segToken.clear()
     """
     def spinBox_segId_changed(self, value): 
         if self.seg_palette.get(value) is None:
