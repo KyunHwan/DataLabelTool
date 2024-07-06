@@ -44,10 +44,6 @@ class ImageMaskViewModel:
     @property
     def shape2D(self):
         return self.h, self.w
-
-    @property
-    def qmask_slice(self):
-        return self.cur_segId - 1
     
     def _generateSegIdPalette(self):
         for i in range(1, self.num_seg_ids+1):
@@ -56,7 +52,7 @@ class ImageMaskViewModel:
 
     def set_empty_masks(self, h, w):
         self._id_mask = np.zeros(shape=(h, w), dtype=np.uint8)
-        self._qmask = np.zeros(shape=(h, w, self.num_seg_ids), dtype=np.uint8)
+        self._qmask = np.zeros(shape=(h, w), dtype=np.uint8)
     
     def set_uint8_rgb_imageData(self, image):
         self._image = np.asarray(image.convert('RGB'), dtype=np.uint8) # Loaded image could be RGBA
@@ -69,8 +65,39 @@ class ImageMaskViewModel:
                              w=self._image.shape[1])
         
     def update_id_mask(self):
-        valid_idx = (self._qmask[:, :, self._cur_segId] > 0)
-        self._id_mask[valid_idx] = self._qmask[:, :, self._cur_segId][valid_idx]
+        valid_idx = (self._qmask > 0)
+        self._id_mask[valid_idx] = self._qmask[valid_idx]
 
     def brush_qmask(self, y, x):
-        self._qmask[y][x][self.qmask_slice] = self.cur_segId
+        self._qmask[y][x] = self.cur_segId
+    
+    def auto_brush_qmask(self, mask):
+        self._qmask[mask] = self.cur_segId
+
+    def load_qmask_from_id_mask(self):
+        valid_idx = (self._id_mask == self.cur_segId)
+        self._qmask[:, :] = 0
+        self._qmask[valid_idx] = self.cur_segId
+
+    def get_image_copy(self):
+        return self.image.copy()
+
+    def create_qimg_using_qmask(self):
+        RGB = self.get_image_copy()
+        valid_idx = (self._qmask > 0)
+        RGB_selected = RGB[valid_idx]
+        if RGB_selected.size != 0: # id > 0 인 mask 픽셀 있을때만 블렌딩한다.
+            mask_arr = self._qmask[valid_idx]
+            pix_cnt = len(mask_arr)                
+            seg_colors = np.array([self.seg_palette[mask_arr[id]] for id in range(pix_cnt)], dtype=np.uint8)
+            RGB[valid_idx] = RGB_selected / 2 +  seg_colors / 2
+        return RGB, valid_idx
+    
+    def update_qimg_using_id_mask(self, RGB, mask):
+        mask = np.logical_and(mask, (self._id_mask > 0))
+        RGB_selected = self.image[mask]
+        if RGB_selected.size != 0: # id > 0 인 mask 픽셀 있을때만 블렌딩한다.
+            mask_arr = self._id_mask[mask]
+            pix_cnt = len(mask_arr)                
+            seg_colors = np.array([self.seg_palette[mask_arr[id]] for id in range(pix_cnt)], dtype=np.uint8)
+            RGB[mask] = (RGB_selected / 2) +  (seg_colors / 2)

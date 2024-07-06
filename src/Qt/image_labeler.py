@@ -24,7 +24,7 @@ class MainWidget(QWidget):
 
         # image rendered on the UI side
         self.cur_qimg = None
-        self.cur_qimg_modified = False
+        self.qmask_modified = False
         self.image_loaded = False
 
         # UI image viewing setup
@@ -109,12 +109,13 @@ class MainWidget(QWidget):
                                     point_labels=np.array(point_labels),
                                     multimask_output=False)
             """
-            masks = self.seg.predict(point_coords=np.array([[128, 60],]),
+            mask = self.seg.predict(point_coords=np.array([[128, 60],]),
                                     point_labels=np.array([0]),
                                     multimask_output=False)[0]
             
-            # Update self.imgMask._qmask 
-            self.
+            # Update self.imgMask._qmask (ie. add the segmentation onto the slice)
+            self.qmask_modified = True
+            self.imgMask.auto_brush_qmask(mask=mask)
             self._updateQImage()
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
@@ -131,65 +132,47 @@ class MainWidget(QWidget):
                 self.ui.label_curSegID.setText(f'Seg ID = {self.imgMask.id_mask[y][x]}') 
 
     def _updateQImage(self):
-            #self.convert_gray_to_seg_color_qimg(slices[slice_num], id_mask[slice_num])
+        if self.image_loaded:
+            RGB = None
+            
+            height, width = self.imgMask.shape2D
+            RGB, qmask_valid_mask = self.imgMask.create_qimg_using_qmask()
+
+            if self.ui.checkBox_overlaySegMask.isChecked():
+                self.imgMask.update_qimg_using_id_mask(RGB, ~qmask_valid_mask)
+
+            self.cur_qimg = QImage(bytes(RGB.data), width, height, width*3, 
+                                        QImage.Format.Format_RGB888)
             self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
     def checkBox_overlaySegMask_changed(self, state):
         if self.image_loaded: self._updateQImage()
 
     def spinBox_segId_changed(self, segId):
-        if self.cur_qimg_modified:
+        if self.qmask_modified:
             self.imgMask.update_id_mask()
-            self.cur_qimg_modified = False
+            self.qmask_modified = False
         if self.image_loaded:
             self.seg.clear_tokens()
             self.imgMask.cur_segId = segId
+            if not self.ui.checkBox_overlaySegMask.isChecked():
+                self.imgMask.load_qmask_from_id_mask()
             self._updateQImage()
 
-    # mask id를 seg color로 map하는 과정이 꽤 느리니 빠른 피드백을 원하는 함수에서 자주 부르지 말것. (ex. paint_slice 함수)
-    def convert_gray_to_seg_color_qimg(self, gray_img, id_mask):
-        if self.image_loaded:
-            h, w = gray_img.shape
-            RGB = np.repeat(gray_img[..., np.newaxis], 3, axis=-1) # img (h,w) --> RGB (h,w,3)
-
-            if self.ui.checkBox_overlaySegMask.isChecked():
-                # seg id to color
-                valid_idx = (id_mask > 0)
-                RGB_selected = RGB[valid_idx]
-                if RGB_selected.size != 0: # id > 0 인 mask 픽셀 있을때만 블렌딩한다.
-                    mask_arr = id_mask[valid_idx]
-                    pix_cnt = len(mask_arr)                
-                    #seg_colors = np.array(list(map(lambda id: self.seg_palette[id], mask_arr)), dtype=np.uint8)
-                    seg_colors = np.array([self.seg_palette[mask_arr[id]] for id in range(pix_cnt)], dtype=np.uint8)
-                    RGB[valid_idx] = RGB_selected / 2 +  seg_colors / 2
-
-                # selected blob 은 highlight_color 로 다시 덧칠하자..
-                blob_idx = (id_mask == self.selected_blob_id)
-                blob_selected = RGB[blob_idx]
-                highlight_color = np.array([255, 0, 0], dtype=np.uint8)
-                if blob_selected.size != 0:                
-                    #RGB[blob_idx] = blob_selected / 4 +  3 * highlight_color / 4
-                    RGB[blob_idx] = highlight_color
-            
-            RGBA = np.zeros((h, w, 4), dtype=np.uint8)
-            RGBA[:,:,:3] = RGB
-            RGBA[:,:,3] = 255
-            self.cur_qimg = QImage(bytes(RGBA), w, h, QImage.Format.Format_RGBA8888)
-    
     def mix_pixel_with_seg_color(self, qimg, cur_x, cur_y):#, org_den, seg_id): 
         try:
             seg_color = self.imgMask.seg_palette[self.imgMask.cur_segId]            
             out_pixel = self.imgMask.image[cur_y][cur_x]#np.array([org_den, org_den, org_den], dtype=np.uint8)
             #print(f"Output pixel is in shape: {out_pixel.shape}")
             updated_pixel = (out_pixel / 2) + (seg_color / 2)  
-            print(updated_pixel.shape)                   
+            #print(updated_pixel.shape)                   
             mix_color = QColor(updated_pixel[0], updated_pixel[1], updated_pixel[2])
             qimg.setPixelColor(cur_x, cur_y, mix_color)
         except KeyError:
             print(f"seg_id : {self.imgMask.cur_segId} does not exist in the dictionary.")
 
     def paint_slice(self, point):
-        self.cur_qimg_modified = True
+        self.qmask_modified = True
         pos_x = int(point.x())
         pos_y = int(point.y())
         brush_size = self.ui.spinBox_brushSize.value()
@@ -203,22 +186,7 @@ class MainWidget(QWidget):
                     self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y)#, org_den)
         
         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))  
-    """
-    
-    """
-    """
-    
-    """
-    """
-    
-    """
-    """
-    
 
-    
-    
-    """
-    
     """
     def listWidget_segIdPaletteList_changed(self):
         self.selected_blob_id = self.ui.listWidget_segIdPaletteList.currentRow()
@@ -283,7 +251,6 @@ class MainWidget(QWidget):
             self.ui.checkBox_overlaySegMask.toggle()
             print(f"Overlay seg mask : {self.ui.checkBox_overlaySegMask.isChecked()}")
         
-        
     """
     def resetToFit(self):
         # reset to fit
@@ -293,4 +260,5 @@ class MainWidget(QWidget):
             self.sliceView.fitInView(0, 0, self.cur_qimg.width(), self.cur_qimg.height(), Qt.KeepAspectRatio)
     
     def saveMasks(self):
+        # push current qmask to id_mask and save
         print('saveMasks clicked')
