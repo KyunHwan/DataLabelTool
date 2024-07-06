@@ -5,7 +5,7 @@ import cv2
 import numpy as np
 from PySide6.QtWidgets import QWidget, QGraphicsPixmapItem, QListWidgetItem, QFileDialog
 from PySide6.QtGui import QPen, QColor, QPixmap, QImage
-from PySide6.QtCore import QT_TR_NOOP_UTF8
+from PySide6.QtCore import QT_TR_NOOP_UTF8, QPoint
 from .ui_segmentation_refine_form import Ui_Form
 from .zoom_graphics_scene import *
 from .zoom_graphics_view import *
@@ -23,6 +23,8 @@ class MainWidget(QWidget):
         self.cur_qimg = None
         self.qmask_modified = False
         self.image_loaded = False
+        self.x = None
+        self.y = None
 
         # UI image viewing setup
         self.ui = Ui_Form()
@@ -42,6 +44,7 @@ class MainWidget(QWidget):
         self.ui.pushButton_autoSeg.clicked.connect(self.auto_segment_image)
         # This shows cursor location
         self.sliceScene.sigMovePositionL.connect(self.show_pixel_seg_id)
+        #self.sliceScene.sigPressedPositionL.connect(self.place_seg_markers)
         # Update UI 
         self.ui.checkBox_overlaySegMask.toggled.connect(self.checkBox_overlaySegMask_changed)
         self.ui.spinBox_segId.valueChanged.connect(self.spinBox_segId_changed)
@@ -99,34 +102,42 @@ class MainWidget(QWidget):
     def auto_segment_image(self):
         if self.image_loaded:
             point_coords, point_labels = self.seg.prompts
+            if len(point_coords) == 0:
+                print("No point prompts added!")
+                return
+            print(f"point_coords_shape: {point_coords.shape}")
+            print(f"point_labels_shape: {point_labels.shape}")
             # Outputs 1 x H x W numpy array
-            """
-            masks = self.seg.predict(point_coords=np.array(point_coords),
-                                    point_labels=np.array(point_labels),
-                                    multimask_output=False)
+            
+            mask = self.seg.predict(point_coords=point_coords,
+                                    point_labels=point_labels,
+                                    multimask_output=False)[0]
             """
             mask = self.seg.predict(point_coords=np.array([[128, 60],]),
                                     point_labels=np.array([0]),
                                     multimask_output=False)[0]
-            
+            """
             # Update self.imgMask._qmask (ie. add the segmentation onto the slice)
             self.qmask_modified = True
             self.imgMask.auto_brush_qmask(mask=mask)
             self._updateQImage()
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
-        self.seg.clear_tokens()
+        self.seg.clear_prompts()
             
     def show_pixel_seg_id(self, point):
         if self.image_loaded and self.imgMask.id_mask_exists:
             x = int(point.x())
-            y = int(point.y())   
+            y = int(point.y())
+            self.x = x
+            self.y = y
             height, width = self.imgMask.shape2D  
             if x >= 0 and x < width and \
                y >= 0 and y < height:
                 self.ui.label_curPos.setText(f'Pos ({x}, {y})')
-                
-                self.ui.label_curSegID.setText(f'Seg ID = {self.imgMask.id_mask[y][x]}') 
+                id = self.imgMask.id_mask[y][x]
+                if id == 0: id = self.imgMask.qmask[y][x]
+                self.ui.label_curSegID.setText(f'Seg ID = {id}') 
 
     def _updateQImage(self):
         if self.image_loaded:
@@ -148,18 +159,20 @@ class MainWidget(QWidget):
             self.imgMask.update_id_mask()
             self.qmask_modified = False
         if self.image_loaded:
-            self.seg.clear_tokens()
+            self.seg.clear_prompts()
             self.imgMask.cur_segId = segId
             #if not self.ui.checkBox_overlaySegMask.isChecked():
             self.imgMask.load_qmask_from_id_mask()
             self._updateQImage()
 
-    def mix_pixel_with_seg_color(self, qimg, cur_x, cur_y):#, org_den, seg_id): 
+    def mix_pixel_with_seg_color(self, qimg, cur_x, cur_y, seg_id):#, org_den, seg_id): 
         try:
-            seg_color = self.imgMask.seg_palette[self.imgMask.cur_segId]            
-            out_pixel = self.imgMask.image[cur_y][cur_x]#np.array([org_den, org_den, org_den], dtype=np.uint8)
-            #print(f"Output pixel is in shape: {out_pixel.shape}")
-            updated_pixel = (out_pixel / 2) + (seg_color / 2)  
+            out_pixel = self.imgMask.image[cur_y][cur_x]
+            updated_pixel = None
+            if seg_id != 0:
+                seg_color = self.imgMask.seg_palette[seg_id]   
+                updated_pixel = (out_pixel / 2) + (seg_color / 2)    
+            else: updated_pixel = out_pixel
             #print(updated_pixel.shape)                   
             mix_color = QColor(updated_pixel[0], updated_pixel[1], updated_pixel[2])
             qimg.setPixelColor(cur_x, cur_y, mix_color)
@@ -178,7 +191,7 @@ class MainWidget(QWidget):
                 if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
                     self.imgMask.brush_qmask(cur_y, cur_x)#id_mask[cur_num][cur_y][cur_x] = seg_id # update seg id
                     #org_den = self.imgMask[cur_num][cur_y][cur_x]
-                    self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y)#, org_den)
+                    self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, self.imgMask.cur_segId)#, org_den)
         
         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))  
 
@@ -208,8 +221,32 @@ class MainWidget(QWidget):
 
         print(f'blob id has changed from {old_id} to {new_id}')
         self._updateQImage(cur_slice_num)
+    """
+    def add_prompt_point(self):
+        self.seg.add_seg_point([self.x, self.y])
+        # Update UI
+        r = 5
+        for y in range(r):
+            for x in range(r):                                
+                cur_x = self.x + x
+                cur_y = self.y + y
+                if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
+                    self.cur_qimg.setPixelColor(cur_x, cur_y, QColor(0, 0, 0))
+                    self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
-    
+    def remove_prompt_point(self):
+        rm_x, rm_y = self.seg.remove_seg_point()
+        if rm_x is not None:
+            r = 5
+            for y in range(r):
+                for x in range(r):                                
+                    cur_x = rm_x + x
+                    cur_y = rm_y + y
+                    if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
+                        seg_id = self.imgMask.id_mask[cur_y][cur_x]
+                        if seg_id == 0: seg_id = self.imgMask.qmask[y][x]
+                        self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, seg_id)
+                        self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Minus:
@@ -245,8 +282,12 @@ class MainWidget(QWidget):
         elif e.key() == Qt.Key_Return:
             self.ui.checkBox_overlaySegMask.toggle()
             print(f"Overlay seg mask : {self.ui.checkBox_overlaySegMask.isChecked()}")
+        elif e.key() == Qt.Key_A:
+            self.add_prompt_point()
+        elif e.key() == Qt.Key_S:
+            self.remove_prompt_point()
+            
         
-    """
     def resetToFit(self):
         # reset to fit
         if self.cur_qimg is not None:

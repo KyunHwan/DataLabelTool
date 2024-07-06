@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt, Signal, QPointF
 class ZoomGraphicsScene(QGraphicsScene):
 
     sigMovePositionL = Signal(QPointF) 
+    sigPressedPositionL = Signal(QPointF)
     sigMovePositionR = Signal(QPointF)
     #sigReleasePosition = Signal(QPointF) 
 
@@ -14,6 +15,8 @@ class ZoomGraphicsScene(QGraphicsScene):
     def mousePressEvent(self, event):
         if event.button() == Qt.RightButton:
             self.mouseStartPnt = event.scenePos()
+        elif event.button() == Qt.LeftButton:
+            self.sigPressedPositionL.emit(event.scenePos())
         
         super().mousePressEvent(event)
     
