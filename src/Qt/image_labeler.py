@@ -17,10 +17,7 @@ class MainWidget(QWidget):
     def __init__(self, imageSegModel=None, num_seg_ids=16):
         super(MainWidget, self).__init__()
         # Auto segmentation model
-        # Temporary containers for clicked points that will be used as tokens to SAM model
-        self.seg = SegmentationViewModel(segmentation_model=imageSegModel)
-        # Image & Mask data
-        self.imgMask = ImageMaskViewModel(num_seg_ids=num_seg_ids)
+        
 
         # image rendered on the UI side
         self.cur_qimg = None
@@ -49,13 +46,12 @@ class MainWidget(QWidget):
         self.ui.checkBox_overlaySegMask.toggled.connect(self.checkBox_overlaySegMask_changed)
         self.ui.spinBox_segId.valueChanged.connect(self.spinBox_segId_changed)
         self.sliceScene.sigMovePositionR.connect(self.paint_slice)
+        
+        # Temporary containers for clicked points that will be used as tokens to SAM model
+        self.seg = SegmentationViewModel(segmentation_model=imageSegModel)
+        # Image & Mask data
+        self.imgMask = ImageMaskViewModel(num_seg_ids=num_seg_ids, cur_segId=self.ui.spinBox_segId.value())
 
-        # Updates the qmask slice that is viewed on UI
-        # clear the segTokens
-        
-        
-        
-        
         
         #self.ui.listWidget_segIdPaletteList.itemSelectionChanged.connect(self.listWidget_segIdPaletteList_changed)
         #self.ui.pushButton_updateBlobID.clicked.connect(self.pushButton_updateBlobID_clicked)
@@ -129,18 +125,17 @@ class MainWidget(QWidget):
             if x >= 0 and x < width and \
                y >= 0 and y < height:
                 self.ui.label_curPos.setText(f'Pos ({x}, {y})')
+                
                 self.ui.label_curSegID.setText(f'Seg ID = {self.imgMask.id_mask[y][x]}') 
 
     def _updateQImage(self):
         if self.image_loaded:
-            RGB = None
-            
-            height, width = self.imgMask.shape2D
             RGB, qmask_valid_mask = self.imgMask.create_qimg_using_qmask()
 
             if self.ui.checkBox_overlaySegMask.isChecked():
                 self.imgMask.update_qimg_using_id_mask(RGB, ~qmask_valid_mask)
 
+            height, width = self.imgMask.shape2D
             self.cur_qimg = QImage(bytes(RGB.data), width, height, width*3, 
                                         QImage.Format.Format_RGB888)
             self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
@@ -155,8 +150,8 @@ class MainWidget(QWidget):
         if self.image_loaded:
             self.seg.clear_tokens()
             self.imgMask.cur_segId = segId
-            if not self.ui.checkBox_overlaySegMask.isChecked():
-                self.imgMask.load_qmask_from_id_mask()
+            #if not self.ui.checkBox_overlaySegMask.isChecked():
+            self.imgMask.load_qmask_from_id_mask()
             self._updateQImage()
 
     def mix_pixel_with_seg_color(self, qimg, cur_x, cur_y):#, org_den, seg_id): 

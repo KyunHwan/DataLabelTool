@@ -1,14 +1,14 @@
 import numpy as np
 
 class ImageMaskViewModel:
-    def __init__(self, num_seg_ids):
+    def __init__(self, num_seg_ids, cur_segId):
         # Original data on the backend
         # Number of segmentation ids (16 for upper/lower respectively)
         self.num_seg_ids = num_seg_ids
 
         self.seg_palette = {}
         self._generateSegIdPalette()
-        self._cur_segId = 1
+        self._cur_segId = cur_segId
 
         # Work on cur_qmask on the UI side and commit so that it can be written into id_mask
         self._id_mask = None # H x W
@@ -33,6 +33,7 @@ class ImageMaskViewModel:
     @property
     def cur_segId(self):
         return self._cur_segId
+    
     @cur_segId.setter
     def cur_segId(self, val):
         self._cur_segId = val
@@ -40,6 +41,10 @@ class ImageMaskViewModel:
     @property
     def image(self):
         return self._image
+    
+    @property
+    def qmask(self):
+        return self._qmask
     
     @property
     def shape2D(self):
