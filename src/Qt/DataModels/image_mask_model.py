@@ -150,6 +150,7 @@ class ImageMaskViewModel:
         print(mask_fileName)
         mask.save(mask_fileName, "PNG")
 
-
+    def clear_qmask(self):
+        self._qmask[:,:] = 0
 
 

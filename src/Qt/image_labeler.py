@@ -55,6 +55,7 @@ class MainWidget(QWidget):
         self.ui.pushButton_updateBlobID.clicked.connect(self.changeSelectedBlobSegId)
         self.ui.pushButton_loadMasks.clicked.connect(self.loadMask)
         self.ui.pushButton_saveMasks.clicked.connect(self.saveMask)
+        self.ui.pushButton_clear.clicked.connect(self.clear_cur_mask)
         # Temporary containers for clicked points that will be used as tokens to SAM model
         self.seg = SegmentationViewModel(segmentation_model=imageSegModel)
         # Image & Mask data
@@ -190,6 +191,7 @@ class MainWidget(QWidget):
 
     def spinBox_segId_changed(self, segId):
         if self.image_loaded:
+            if self.ui.checkBox_eraserEnabled.value(): self.ui.checkBox_eraserEnabled.toggle()
             self.seg.clear_prompts()
             self.imgMask.update_id_mask()
             self.imgMask.cur_segId = segId
@@ -324,6 +326,10 @@ class MainWidget(QWidget):
             self.sliceView.setSceneRect(0, 0, self.cur_qimg.width(), self.cur_qimg.height())
             self.sliceView.fitInView(0, 0, self.cur_qimg.width(), self.cur_qimg.height(), Qt.KeepAspectRatio)
     
+    def clear_cur_mask(self):
+        self.imgMask.clear_qmask()
+        self._updateQImage()
+
     def saveMask(self):
         init_path = os.getcwd()
         try:
