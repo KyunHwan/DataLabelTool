@@ -73,8 +73,8 @@ class ImageMaskViewModel:
         valid_idx = (self._qmask > 0)
         self._id_mask[valid_idx] = self._qmask[valid_idx]
 
-    def brush_qmask(self, y, x):
-        self._qmask[y][x] = self.cur_segId
+    def brush_qmask(self, y, x, brush_id):
+        self._qmask[y][x] = brush_id
     
     def auto_brush_qmask(self, mask):
         self._qmask[mask] = self.cur_segId

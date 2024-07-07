@@ -20,10 +20,10 @@ class MainWidget(QWidget):
         
         # image rendered on the UI side
         self.cur_qimg = None
-        self.qmask_modified = False
         self.image_loaded = False
         self.x = None
         self.y = None
+        self.eraser_enabled = False
 
         # UI image viewing setup
         self.ui = Ui_Form()
@@ -116,7 +116,6 @@ class MainWidget(QWidget):
                                     multimask_output=False)[0]
             """
             # Update self.imgMask._qmask (ie. add the segmentation onto the slice)
-            self.qmask_modified = True
             self.imgMask.auto_brush_qmask(mask=mask)
             self._updateQImage()
         else:
@@ -132,8 +131,8 @@ class MainWidget(QWidget):
             if x >= 0 and x < width and \
                y >= 0 and y < height:
                 self.ui.label_curPos.setText(f'Pos ({x}, {y})')
-                id = self.imgMask.id_mask[y][x]
-                if id == 0: id = self.imgMask.qmask[y][x]
+                id = self.imgMask.qmask[y][x]
+                if id == 0: id = self.imgMask.id_mask[y][x]
                 self.ui.label_curSegID.setText(f'Seg ID = {id}') 
 
     def _updateQImage(self):
@@ -153,14 +152,9 @@ class MainWidget(QWidget):
         if self.image_loaded: self._updateQImage()
 
     def spinBox_segId_changed(self, segId):
-        if self.qmask_modified:
-            self.qmask_modified = False
         if self.image_loaded:
             self.imgMask.update_id_mask()
-            
             self.imgMask.cur_segId = segId
-            #if not self.ui.checkBox_overlaySegMask.isChecked():
-            
             self.imgMask.load_qmask_from_id_mask()
             self._updateQImage()
 
@@ -179,7 +173,6 @@ class MainWidget(QWidget):
             print(f"seg_id : {self.imgMask.cur_segId} does not exist in the dictionary.")
 
     def paint_slice(self, point):
-        self.qmask_modified = True
         pos_x = int(point.x())
         pos_y = int(point.y())
         brush_size = self.ui.spinBox_brushSize.value()
@@ -188,9 +181,12 @@ class MainWidget(QWidget):
                 cur_x = pos_x + x
                 cur_y = pos_y + y
                 if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
-                    self.imgMask.brush_qmask(cur_y, cur_x)#id_mask[cur_num][cur_y][cur_x] = seg_id # update seg id
-                    #org_den = self.imgMask[cur_num][cur_y][cur_x]
-                    self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, self.imgMask.cur_segId)#, org_den)
+                    if self.eraser_enabled:
+                        self.imgMask.brush_qmask(cur_y, cur_x, 0)
+                        self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, 0)
+                    else:
+                        self.imgMask.brush_qmask(cur_y, cur_x, self.imgMask.cur_segId)
+                        self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, self.imgMask.cur_segId)
         
         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))  
 
@@ -242,8 +238,8 @@ class MainWidget(QWidget):
                     cur_x = rm_x + x
                     cur_y = rm_y + y
                     if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
-                        seg_id = self.imgMask.id_mask[cur_y][cur_x]
-                        if seg_id == 0: seg_id = self.imgMask.qmask[y][x]
+                        seg_id = self.imgMask.qmask[y][x]
+                        if seg_id == 0: seg_id = self.imgMask.id_mask[cur_y][cur_x]
                         self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, seg_id)
                         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
@@ -275,6 +271,8 @@ class MainWidget(QWidget):
             self.add_prompt_point()
         elif e.key() == Qt.Key_S:
             self.remove_prompt_point()
+        elif e.key() == Qt.Key_E:
+            self.eraser_enabled = ~self.eraser_enabled
             
         
     def resetToFit(self):
