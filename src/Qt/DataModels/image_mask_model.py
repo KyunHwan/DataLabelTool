@@ -58,7 +58,19 @@ class ImageMaskViewModel:
     def set_empty_masks(self, h, w):
         self._id_mask = np.zeros(shape=(h, w), dtype=np.uint8)
         self._qmask = np.zeros(shape=(h, w), dtype=np.uint8)
-    
+
+    def set_mask(self, mask):
+        # image must have been loaded first
+        # Mask shape must be available
+        h, w = mask.shape
+        height, width = self.shape2D
+        if height != h or width != w:
+            print("Mask shape (Height & Width) does not equal that of the loaded image!")
+        else:
+            self._id_mask[:] = 0
+            valid_idx = np.logical_and((mask > 0), (mask <= self.num_seg_ids))
+            self._id_mask[valid_idx] = mask[valid_idx]
+        
     def set_uint8_rgb_imageData(self, image):
         self._image = np.asarray(image.convert('RGB'), dtype=np.uint8) # Loaded image could be RGBA
         self.h, self.w, _ = self._image.shape
@@ -69,6 +81,12 @@ class ImageMaskViewModel:
         self.set_empty_masks(h=self._image.shape[0],
                              w=self._image.shape[1])
         
+    def zero_out_qmask(self):
+        self._qmask[:,:] = 0
+
+    def change_idMask_segId(self, old_id, new_id):
+        self._id_mask[(self._id_mask == old_id)] = new_id
+
     def update_id_mask(self):
         valid_idx = (self._qmask > 0)
         self._id_mask[valid_idx] = self._qmask[valid_idx]

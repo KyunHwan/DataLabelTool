@@ -35,7 +35,10 @@ class MainWidget(QWidget):
         self.sliceView = ZoomGraphicsView()
         self.sliceView.setScene(self.sliceScene)
         self.ui.verticalLayout.addWidget(self.sliceView)
+
         self.ui.spinBox_segId.setRange(1, num_seg_ids)
+        self.ui.spinBox_curBlobID.setRange(1, num_seg_ids)
+        self.ui.spinBox_newBlobID.setRange(1, num_seg_ids)
 
         # Load image onto UI side
         self.ui.pushButton_loadImage.clicked.connect(self.loadImage)
@@ -48,7 +51,10 @@ class MainWidget(QWidget):
         self.ui.checkBox_overlaySegMask.toggled.connect(self.checkBox_overlaySegMask_changed)
         self.ui.spinBox_segId.valueChanged.connect(self.spinBox_segId_changed)
         self.sliceScene.sigMovePositionR.connect(self.paint_slice)
-        
+        self.ui.checkBox_eraserEnabled.toggled.connect(self.toggle_eraser_state)
+        self.ui.pushButton_updateBlobID.clicked.connect(self.changeSelectedBlobSegId)
+        self.ui.pushButton_loadMasks.clicked.connect(self.loadMask)
+
         # Temporary containers for clicked points that will be used as tokens to SAM model
         self.seg = SegmentationViewModel(segmentation_model=imageSegModel)
         # Image & Mask data
@@ -70,8 +76,18 @@ class MainWidget(QWidget):
             item.setBackground( bgColor )
             self.ui.listWidget_segIdPaletteList.insertItem(i, item)
 
+    def changeSelectedBlobSegId(self):
+        cur_selected_seg_id = self.ui.spinBox_curBlobID.value()
+        new_selected_seg_id = self.ui.spinBox_newBlobID.value()
+        self.imgMask.update_id_mask()
+        self.imgMask.zero_out_qmask()
+        if not self.ui.checkBox_overlaySegMask.isChecked():
+            self.ui.checkBox_overlaySegMask.toggle()
+        self.imgMask.change_idMask_segId(cur_selected_seg_id, new_selected_seg_id)
+        self.seg.clear_prompts()
+        self._updateQImage()
+
     def loadImage(self):
-        # Find image
         init_path = os.getcwd()
         try:
             fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
@@ -97,6 +113,25 @@ class MainWidget(QWidget):
         except: 
             print("Loading image aborted...!")
 
+    def loadMask(self):
+        if self.image_loaded:
+            init_path = os.getcwd()
+            try:
+                fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
+            
+                #Load mask
+                with Image.open(fileName) as mask:
+                    self.set_mask(mask)
+                
+                # Get the embedded image token from SAM for segmentation processes down the line
+                if self.imgMask.image_exists: self._updateQImage()
+                print("Mask loaded!")
+                
+            except: 
+                print("Loading mask aborted...!")
+        else:
+            print("Load in an image first!")
+
     def auto_segment_image(self):
         if self.image_loaded:
             point_coords, point_labels = self.seg.prompts
@@ -117,6 +152,7 @@ class MainWidget(QWidget):
             """
             # Update self.imgMask._qmask (ie. add the segmentation onto the slice)
             self.imgMask.auto_brush_qmask(mask=mask)
+            self.seg.clear_prompts()
             self._updateQImage()
         else:
             print("Either model doesn't exist or image doesn't exist!\n")
@@ -137,7 +173,7 @@ class MainWidget(QWidget):
 
     def _updateQImage(self):
         if self.image_loaded:
-            self.seg.clear_prompts()
+            
             RGB, qmask_valid_mask = self.imgMask.create_qimg_using_qmask()
 
             if self.ui.checkBox_overlaySegMask.isChecked():
@@ -153,6 +189,7 @@ class MainWidget(QWidget):
 
     def spinBox_segId_changed(self, segId):
         if self.image_loaded:
+            self.seg.clear_prompts()
             self.imgMask.update_id_mask()
             self.imgMask.cur_segId = segId
             self.imgMask.load_qmask_from_id_mask()
@@ -243,23 +280,26 @@ class MainWidget(QWidget):
                         self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, seg_id)
                         self.sliceItem.setPixmap(QPixmap.fromImage(self.cur_qimg))
 
+    def toggle_eraser_state(self, state):
+        self.eraser_enabled = state
+
     def keyPressEvent(self, e):
-        if e.key() == Qt.Key_Z:
+        if e.key() == Qt.Key_Q:
             value = self.ui.spinBox_brushSize.value() - 1
             if (value >= self.ui.spinBox_brushSize.minimum()):
                 self.ui.spinBox_brushSize.setValue(value)
                 print(f"brush_size : {value}")
-        elif e.key() == Qt.Key_X:
+        elif e.key() == Qt.Key_W:
             value = self.ui.spinBox_brushSize.value() + 1
             if (value <= self.ui.spinBox_brushSize.maximum()):
                 self.ui.spinBox_brushSize.setValue(value)
                 print(f"brush_size : {value}")
-        elif e.key() == Qt.Key_Q:
+        elif e.key() == Qt.Key_Z:
             value = self.ui.spinBox_segId.value() - 1
             if (value >= self.ui.spinBox_segId.minimum()):
                 self.ui.spinBox_segId.setValue(value)
                 print(f"seg_id : {value}")
-        elif e.key() == Qt.Key_W:
+        elif e.key() == Qt.Key_X:
             value = self.ui.spinBox_segId.value() + 1
             if (value <= self.ui.spinBox_segId.maximum()):
                 self.ui.spinBox_segId.setValue(value)
@@ -272,9 +312,10 @@ class MainWidget(QWidget):
         elif e.key() == Qt.Key_S:
             self.remove_prompt_point()
         elif e.key() == Qt.Key_E:
-            self.eraser_enabled = ~self.eraser_enabled
+            self.ui.checkBox_eraserEnabled.toggle()
+        elif e.key() == Qt.Key_D: 
+            self.auto_segment_image()
             
-        
     def resetToFit(self):
         # reset to fit
         if self.cur_qimg is not None:
