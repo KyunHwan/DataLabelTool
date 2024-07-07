@@ -191,7 +191,7 @@ class MainWidget(QWidget):
 
     def spinBox_segId_changed(self, segId):
         if self.image_loaded:
-            if self.ui.checkBox_eraserEnabled.value(): self.ui.checkBox_eraserEnabled.toggle()
+            if self.ui.checkBox_eraserEnabled.isChecked(): self.ui.checkBox_eraserEnabled.toggle()
             self.seg.clear_prompts()
             self.imgMask.update_id_mask()
             self.imgMask.cur_segId = segId
@@ -328,6 +328,7 @@ class MainWidget(QWidget):
     
     def clear_cur_mask(self):
         self.imgMask.clear_qmask()
+        self.seg.clear_prompts()
         self._updateQImage()
 
     def saveMask(self):
