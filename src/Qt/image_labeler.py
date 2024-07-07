@@ -122,9 +122,6 @@ class MainWidget(QWidget):
                 print(fileName)
                 #Load mask
                 with Image.open(fileName) as mask:
-                    print("opened mask!")
-                    if len(mask.shape) == 3:
-                        raise ValueError("Too many channels in loaded mask!")
                     self.imgMask.set_mask(mask)
                 
                 # Get the embedded image token from SAM for segmentation processes down the line

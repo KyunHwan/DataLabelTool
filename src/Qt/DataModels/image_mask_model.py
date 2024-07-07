@@ -66,7 +66,7 @@ class ImageMaskViewModel:
     def set_mask(self, mask):
         # image must have been loaded first
         # Mask shape must be available
-        mask = np.asarray(mask, dtype=np.uint8)
+        mask = np.asarray(mask.convert('L'), dtype=np.uint8)
         print("mask converted to numpy array!")
         print(mask.shape)
         h, w = mask.shape
