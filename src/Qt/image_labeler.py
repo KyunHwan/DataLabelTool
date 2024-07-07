@@ -54,7 +54,7 @@ class MainWidget(QWidget):
         self.ui.checkBox_eraserEnabled.toggled.connect(self.toggle_eraser_state)
         self.ui.pushButton_updateBlobID.clicked.connect(self.changeSelectedBlobSegId)
         self.ui.pushButton_loadMasks.clicked.connect(self.loadMask)
-
+        self.ui.pushButton_saveMasks.clicked.connect(self.saveMask)
         # Temporary containers for clicked points that will be used as tokens to SAM model
         self.seg = SegmentationViewModel(segmentation_model=imageSegModel)
         # Image & Mask data
@@ -63,7 +63,7 @@ class MainWidget(QWidget):
         #self.ui.listWidget_segIdPaletteList.itemSelectionChanged.connect(self.listWidget_segIdPaletteList_changed)
         #self.ui.pushButton_updateBlobID.clicked.connect(self.pushButton_updateBlobID_clicked)
 
-        #self.ui.pushButton_saveMasks.clicked.connect(self.saveMasks)
+        
 
         #self.selected_blob_id = -1
 
@@ -94,6 +94,7 @@ class MainWidget(QWidget):
         
             # Open image
             with Image.open(fileName) as image:
+                self.imgMask.loadFileName(fileName)
                 self.imgMask.set_uint8_rgb_imageData_empty_masks(image)
             image = self.imgMask.image
             height, width = self.imgMask.shape2D
@@ -118,13 +119,16 @@ class MainWidget(QWidget):
             init_path = os.getcwd()
             try:
                 fileName = QFileDialog.getOpenFileName(self, 'Select file to open', init_path, 'png file(*.png)')[0]
-            
+                print(fileName)
                 #Load mask
                 with Image.open(fileName) as mask:
-                    self.set_mask(mask)
+                    print("opened mask!")
+                    if len(mask.shape) == 3:
+                        raise ValueError("Too many channels in loaded mask!")
+                    self.imgMask.set_mask(mask)
                 
                 # Get the embedded image token from SAM for segmentation processes down the line
-                if self.imgMask.image_exists: self._updateQImage()
+                self._updateQImage()
                 print("Mask loaded!")
                 
             except: 
@@ -203,7 +207,6 @@ class MainWidget(QWidget):
                 seg_color = self.imgMask.seg_palette[seg_id]   
                 updated_pixel = (out_pixel / 2) + (seg_color / 2)    
             else: updated_pixel = out_pixel
-            #print(updated_pixel.shape)                   
             mix_color = QColor(updated_pixel[0], updated_pixel[1], updated_pixel[2])
             qimg.setPixelColor(cur_x, cur_y, mix_color)
         except KeyError:
@@ -219,6 +222,7 @@ class MainWidget(QWidget):
                 cur_y = pos_y + y
                 if cur_x >= 0 and cur_x < self.cur_qimg.width() and cur_y >= 0 and cur_y < self.cur_qimg.height(): 
                     if self.eraser_enabled:
+                        if not self.imgMask.qmask_pixel_is_segId(cur_x, cur_y): continue
                         self.imgMask.brush_qmask(cur_y, cur_x, 0)
                         self.mix_pixel_with_seg_color(self.cur_qimg, cur_x, cur_y, 0)
                     else:
@@ -304,7 +308,7 @@ class MainWidget(QWidget):
             if (value <= self.ui.spinBox_segId.maximum()):
                 self.ui.spinBox_segId.setValue(value)
                 print(f"seg_id : {value}")
-        elif e.key() == Qt.Key_Space:
+        elif e.key() == Qt.Key_C:
             self.ui.checkBox_overlaySegMask.toggle()
             print(f"Overlay seg mask : {self.ui.checkBox_overlaySegMask.isChecked()}")
         elif e.key() == Qt.Key_A:
@@ -323,6 +327,12 @@ class MainWidget(QWidget):
             self.sliceView.setSceneRect(0, 0, self.cur_qimg.width(), self.cur_qimg.height())
             self.sliceView.fitInView(0, 0, self.cur_qimg.width(), self.cur_qimg.height(), Qt.KeepAspectRatio)
     
-    def saveMasks(self):
-        # push current qmask to id_mask and save
-        print('saveMasks clicked')
+    def saveMask(self):
+        init_path = os.getcwd()
+        try:
+            saveDir = QFileDialog.getExistingDirectory(self, 'Save Folder', init_path)
+            print("saveDir found!")
+            self.imgMask.saveMask(saveDir)
+            print("Label mask saved!")
+        except:
+            print("Saving mask aborted!")

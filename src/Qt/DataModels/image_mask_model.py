@@ -1,4 +1,7 @@
 import numpy as np
+from src.utils.download_model_checkpoint import get_filename_from_url
+from PIL import Image
+import os
 
 class ImageMaskViewModel:
     def __init__(self, num_seg_ids, cur_segId):
@@ -18,6 +21,7 @@ class ImageMaskViewModel:
         self._image = None # H x W x 3
         self.h = None
         self.w = None
+        self.loaded_image_name = None
     
     @property
     def image_exists(self):
@@ -62,6 +66,9 @@ class ImageMaskViewModel:
     def set_mask(self, mask):
         # image must have been loaded first
         # Mask shape must be available
+        mask = np.asarray(mask, dtype=np.uint8)
+        print("mask converted to numpy array!")
+        print(mask.shape)
         h, w = mask.shape
         height, width = self.shape2D
         if height != h or width != w:
@@ -74,7 +81,6 @@ class ImageMaskViewModel:
     def set_uint8_rgb_imageData(self, image):
         self._image = np.asarray(image.convert('RGB'), dtype=np.uint8) # Loaded image could be RGBA
         self.h, self.w, _ = self._image.shape
-        print(self._image.shape)
     
     def set_uint8_rgb_imageData_empty_masks(self, image):
         self.set_uint8_rgb_imageData(image)
@@ -125,3 +131,25 @@ class ImageMaskViewModel:
             pix_cnt = len(mask_arr)                
             seg_colors = np.array([self.seg_palette[mask_arr[id]] for id in range(pix_cnt)], dtype=np.uint8)
             RGB[mask] = (RGB_selected / 2) +  (seg_colors / 2)
+
+    def qmask_pixel_is_segId(self, x, y):
+        return (self._qmask[y][x] == self.cur_segId)
+
+    def loadFileName(self, fileName):
+        self.loaded_image_name = get_filename_from_url(fileName)
+
+    def saveMask(self, saveDir):
+        # push current qmask to id_mask and save
+        valid_idx = (self._qmask > 0)
+        self._id_mask[valid_idx] = self._qmask[valid_idx]
+        print("id_mask uploaded before saving!")
+        mask = Image.fromarray(self._id_mask, mode="L")
+        print("mask Image fileoutput from id_mask array")
+        
+        mask_fileName = os.path.join(saveDir, os.path.splitext(self.loaded_image_name)[0] + '_labels.png')
+        print(mask_fileName)
+        mask.save(mask_fileName, "PNG")
+
+
+
+
